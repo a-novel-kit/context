@@ -18,23 +18,21 @@ trap int_handler INT
 podman play kube ${KUBE_FILE}
 
 export PORT=8080
-export DSN="postgres://test:test@localhost:5001/test?sslmode=disable"
+export DSN="postgres://test:test@localhost:5432/test?sslmode=disable"
 
 # Clear old coverage files.
 if [ -d "$GOCOVERTMPDIR" ]; then rm -Rf $GOCOVERTMPDIR; fi
 mkdir $GOCOVERTMPDIR
 
 # Execute tests.
-find . -name go.mod -execdir \
-  go run ${TEST_TOOL_PKG} --format pkgname -- \
-  -cover -v -count=1 \
-  $(go list ./... | grep -v /mocks) \
-  -args -test.gocoverdir=$GOCOVERTMPDIR \;
+go run ${TEST_TOOL_PKG} --format pkgname -- \
+  -cover -covermode=atomic -v -count=1 \
+  $(go list -m | grep -v /mocks) \
+  -args -test.gocoverdir=$GOCOVERTMPDIR
 
 # Collect test coverage.
 go tool covdata textfmt -i="$GOCOVERTMPDIR" -o=cover.out
 go tool cover -html=cover.out -o=cover.html
-go tool cover -func=cover.out -o=cover.out
 
 # Normal execution: containers are shut down.
 podman kube down ${KUBE_FILE}

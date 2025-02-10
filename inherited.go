@@ -9,9 +9,7 @@ import (
 // API boundaries.
 //
 // Context's methods may be called by multiple goroutines simultaneously.
-type Context interface {
-	context.Context
-}
+type Context = context.Context
 
 // A CancelFunc tells an operation to abandon its work.
 // A CancelFunc does not wait for the work to stop.

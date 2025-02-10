@@ -35,6 +35,8 @@ linters-settings:
 issues:
   exclude-dirs:
     - mocks
-    - cmd
-  exclude-files:
-    - ".*_test\\.go"
+  exclude-rules:
+    - path: postgres_test.go
+      linters:
+        - paralleltest
+        - tparallel

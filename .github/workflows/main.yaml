@@ -7,3 +7,5 @@ jobs:
     uses: a-novel-kit/workflows/.github/workflows/test-go.yaml@master
     secrets:
       codecov_token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      postgres: true

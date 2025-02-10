@@ -1,15 +1,17 @@
 package pgctx_test
 
 import (
-	"github.com/a-novel-kit/context"
-	pgctx "github.com/a-novel-kit/context/pgbun"
-	"github.com/a-novel-kit/context/pgbun/test/migrations"
+	"context"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	pgctx "github.com/a-novel-kit/context/pgbun"
+	"github.com/a-novel-kit/context/pgbun/test/migrations"
 )
 
-func countPG(t *testing.T, ctx context.Context) int {
+func countPG(ctx context.Context, t *testing.T) int {
 	t.Helper()
 
 	db, err := pgctx.Context(ctx)
@@ -17,7 +19,9 @@ func countPG(t *testing.T, ctx context.Context) int {
 	require.NotNil(t, db)
 
 	row := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM test;")
+
 	var res int
+
 	require.NoError(t, row.Scan(&res))
 	require.NoError(t, row.Err())
 
@@ -39,7 +43,7 @@ func TestPGContextOKMigrations(t *testing.T) {
 	ctx, err := pgctx.NewContext(context.Background(), &migrations.Migrations)
 	require.NoError(t, err)
 
-	require.Equal(t, 0, countPG(t, ctx))
+	require.Equal(t, 0, countPG(ctx, t))
 }
 
 func TestPGContextTransactionRollbackExplicitly(t *testing.T) {
@@ -52,23 +56,20 @@ func TestPGContextTransactionRollbackExplicitly(t *testing.T) {
 	db, err := pgctx.Context(tx)
 	require.NoError(t, err)
 
-	t.Run("InsertInTX", func(t *testing.T) {
-		require.Equal(t, 0, countPG(t, tx))
+	t.Log("InsertInTX")
+	require.Equal(t, 0, countPG(tx, t))
 
-		_, err = db.ExecContext(tx, "INSERT INTO test (id, content) VALUES (?, ?);", uuid.New(), "foobarqux")
-		require.NoError(t, err)
+	_, err = db.ExecContext(tx, "INSERT INTO test (id, content) VALUES (?, ?);", uuid.New(), "foobarqux")
+	require.NoError(t, err)
 
-		require.Equal(t, 1, countPG(t, tx))
-	})
+	require.Equal(t, 1, countPG(tx, t))
 
-	t.Run("InvisibleFromParent", func(t *testing.T) {
-		require.Equal(t, 0, countPG(t, ctx))
-	})
+	t.Log("InvisibleFromParent")
+	require.Equal(t, 0, countPG(ctx, t))
 
-	t.Run("Rollback", func(t *testing.T) {
-		require.NoError(t, cancel(false))
-		require.Equal(t, 0, countPG(t, ctx))
-	})
+	t.Log("Rollback")
+	require.NoError(t, cancel(false))
+	require.Equal(t, 0, countPG(ctx, t))
 }
 
 func TestPGContextTransactionRollbackAuto(t *testing.T) {
@@ -83,23 +84,20 @@ func TestPGContextTransactionRollbackAuto(t *testing.T) {
 	db, err := pgctx.Context(tx)
 	require.NoError(t, err)
 
-	t.Run("InsertInTX", func(t *testing.T) {
-		require.Equal(t, 0, countPG(t, tx))
+	t.Log("InsertInTX")
+	require.Equal(t, 0, countPG(tx, t))
 
-		_, err = db.ExecContext(tx, "INSERT INTO test (id, content) VALUES (?, ?);", uuid.New(), "foobarqux")
-		require.NoError(t, err)
+	_, err = db.ExecContext(tx, "INSERT INTO test (id, content) VALUES (?, ?);", uuid.New(), "foobarqux")
+	require.NoError(t, err)
 
-		require.Equal(t, 1, countPG(t, tx))
-	})
+	require.Equal(t, 1, countPG(tx, t))
 
-	t.Run("InvisibleFromParent", func(t *testing.T) {
-		require.Equal(t, 0, countPG(t, parentCTX))
-	})
+	t.Log("InvisibleFromParent")
+	require.Equal(t, 0, countPG(parentCTX, t))
 
-	t.Run("Rollback", func(t *testing.T) {
-		parentCancel()
-		require.Equal(t, 0, countPG(t, ctx))
-	})
+	t.Log("Rollback")
+	parentCancel()
+	require.Equal(t, 0, countPG(ctx, t))
 }
 
 func TestPGContextTransactionCommit(t *testing.T) {
@@ -112,29 +110,39 @@ func TestPGContextTransactionCommit(t *testing.T) {
 	db, err := pgctx.Context(tx)
 	require.NoError(t, err)
 
-	t.Run("InsertInTX", func(t *testing.T) {
-		require.Equal(t, 0, countPG(t, tx))
+	t.Log("InsertInTX")
+	require.Equal(t, 0, countPG(tx, t))
 
-		_, err = db.ExecContext(tx, "INSERT INTO test (id, content) VALUES (?, ?);", uuid.New(), "foobarqux")
-		require.NoError(t, err)
+	_, err = db.ExecContext(tx, "INSERT INTO test (id, content) VALUES (?, ?);", uuid.New(), "foobarqux")
+	require.NoError(t, err)
 
-		require.Equal(t, 1, countPG(t, tx))
-	})
+	require.Equal(t, 1, countPG(tx, t))
 
-	t.Run("InvisibleFromParent", func(t *testing.T) {
-		require.Equal(t, 0, countPG(t, ctx))
-	})
+	t.Log("InvisibleFromParent")
+	require.Equal(t, 0, countPG(ctx, t))
 
-	t.Run("Commit", func(t *testing.T) {
-		require.NoError(t, cancel(true))
-		require.Equal(t, 1, countPG(t, ctx))
+	t.Log("Commit")
+	require.NoError(t, cancel(true))
+	require.Equal(t, 1, countPG(ctx, t))
 
-		db, err = pgctx.Context(ctx)
-		res, err := db.ExecContext(ctx, "DELETE FROM test;")
-		require.NoError(t, err)
+	db, err = pgctx.Context(ctx)
+	require.NoError(t, err)
+	res, err := db.ExecContext(ctx, "DELETE FROM test;")
+	require.NoError(t, err)
 
-		rowsAffected, err := res.RowsAffected()
-		require.NoError(t, err)
-		require.Equal(t, int64(1), rowsAffected)
-	})
+	rowsAffected, err := res.RowsAffected()
+	require.NoError(t, err)
+	require.Equal(t, int64(1), rowsAffected)
+}
+
+func TestNoDSN(t *testing.T) {
+	t.Setenv(pgctx.PostgresDSNEnv, "")
+	_, err := pgctx.NewContext(context.Background(), nil)
+	require.ErrorIs(t, err, pgctx.ErrNoDSN)
+}
+
+func TestBadDSN(t *testing.T) {
+	t.Setenv(pgctx.PostgresDSNEnv, "postgres://test:test@localhost:1111/test?sslmode=disable")
+	_, err := pgctx.NewContext(context.Background(), nil)
+	require.Error(t, err)
 }

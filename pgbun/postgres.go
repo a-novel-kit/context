@@ -17,24 +17,26 @@ import (
 )
 
 const (
-	// PostgresDNSEnv is the env variable that should contain the Postgres connection string (Data Source Name or DSN).
+	// PostgresDSNEnv is the env variable that should contain the Postgres connection string (Data Source Name or DSN).
 	//
 	// The DSN string should be in the format:
 	//
 	//	postgres://[user]:[password]@[host]:[port]/[database]?[...pgoptions]
-	PostgresDNSEnv = "DSN"
+	PostgresDSNEnv = "DSN"
 
 	pgContextKey context.CtxKey = "pg"
+
+	PingTimeout = 10 * time.Second
 )
 
-var ErrNoDNS = errors.New("missing DSN environment variable")
+var ErrNoDSN = errors.New("missing DSN environment variable")
 
 // NewContext returns a new context with a shared PG connection.
 func NewContext(ctx context.Context, migrations *embed.FS) (context.Context, error) {
 	// Get the URL connection string from the environment.
-	dsn := os.Getenv(PostgresDNSEnv)
+	dsn := os.Getenv(PostgresDSNEnv)
 	if dsn == "" {
-		return nil, ErrNoDNS
+		return nil, ErrNoDSN
 	}
 
 	// Open a connection to the database.
@@ -44,18 +46,13 @@ func NewContext(ctx context.Context, migrations *embed.FS) (context.Context, err
 	// to the global variable.
 	client := bun.NewDB(sqldb, pgdialect.New())
 
+	pingCtx, endPing := context.WithTimeout(ctx, PingTimeout)
+
 	// Wait for connection to be established.
-	err := client.Ping()
+	err := client.PingContext(pingCtx)
 
-	// Sometimes the database takes some time to be available, like when it is started at the same time as the
-	// server (this usually happens under development / testing environments).
-	for i := 0; i < 10 && err != nil; i++ {
-		time.Sleep(1 * time.Second)
+	endPing()
 
-		err = client.Ping()
-	}
-
-	// Database failed to provide a valid response in the expected time.
 	if err != nil {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}

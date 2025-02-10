@@ -1,0 +1,40 @@
+linters:
+  enable-all: true
+  disable:
+    - depguard
+    - exportloopref
+    - dupl
+    - varnamelen
+    - goimports
+    - nilnil
+    - ireturn
+    - gochecknoglobals
+    - funlen
+    - exhaustruct
+    - cyclop
+    - errname
+    - godox
+    - wrapcheck
+
+linters-settings:
+  gci:
+    sections:
+      - standard # Standard section: captures all standard packages.
+      - default # Default section: contains all imports that could not be matched to another section type.
+      - prefix(github.com/a-novel-kit)
+      - prefix(github.com/a-novel-kit/context)
+    skip-generated: true
+  gosec:
+    excludes:
+      - G115
+  tagliatelle:
+    case:
+      rules:
+        json: snake # JWT standards uses snake case.
+
+issues:
+  exclude-dirs:
+    - mocks
+    - cmd
+  exclude-files:
+    - ".*_test\\.go"

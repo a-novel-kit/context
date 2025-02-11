@@ -11,13 +11,15 @@ import (
 func TestExtractValue(t *testing.T) {
 	t.Parallel()
 
+	type foo struct{}
+
 	value := "bar"
-	ctx := context.WithValue(context.Background(), context.CtxKey("foo"), value)
+	ctx := context.WithValue(context.Background(), foo{}, value)
 
 	t.Run("OK", func(t *testing.T) {
 		t.Parallel()
 
-		extracted, err := context.ExtractValue[string](ctx, "foo")
+		extracted, err := context.ExtractValue[string](ctx, foo{})
 		require.NoError(t, err)
 		require.Equal(t, value, extracted)
 	})
@@ -25,7 +27,7 @@ func TestExtractValue(t *testing.T) {
 	t.Run("WrongType", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := context.ExtractValue[int](ctx, "foo")
+		_, err := context.ExtractValue[int](ctx, foo{})
 		require.ErrorIs(t, err, context.ErrUnsupportedContext)
 	})
 

@@ -16,6 +16,8 @@ import (
 	"github.com/a-novel-kit/context"
 )
 
+type postgresKey struct{}
+
 const (
 	// PostgresDSNEnv is the env variable that should contain the Postgres connection string (Data Source Name or DSN).
 	//
@@ -23,8 +25,6 @@ const (
 	//
 	//	postgres://[user]:[password]@[host]:[port]/[database]?[...pgoptions]
 	PostgresDSNEnv = "DSN"
-
-	pgContextKey context.CtxKey = "pg"
 
 	PingTimeout = 10 * time.Second
 )
@@ -74,7 +74,7 @@ func NewContext(ctx context.Context, migrations *embed.FS) (context.Context, err
 		}
 	}
 
-	ctxPG := context.WithValue(ctx, pgContextKey, bun.IDB(client))
+	ctxPG := context.WithValue(ctx, postgresKey{}, bun.IDB(client))
 	// Close clients on context termination.
 	context.AfterFunc(ctxPG, func() {
 		_ = client.Close()
@@ -102,7 +102,7 @@ func NewContextTX(ctx context.Context, opts *sql.TxOptions) (context.Context, fu
 		return nil, nil, fmt.Errorf("begin tx: %w", err)
 	}
 
-	ctxTx, cancelFn := context.WithCancel(context.WithValue(ctx, pgContextKey, bun.IDB(tx)))
+	ctxTx, cancelFn := context.WithCancel(context.WithValue(ctx, postgresKey{}, bun.IDB(tx)))
 	context.AfterFunc(ctxTx, func() {
 		// If context is canceled without calling the cancel function, abort.
 		// If the cancel function was already called, this will return an error,
@@ -125,5 +125,5 @@ func NewContextTX(ctx context.Context, opts *sql.TxOptions) (context.Context, fu
 
 // Context extracts the Postgres virtual database from the context.
 func Context(ctx context.Context) (bun.IDB, error) {
-	return context.ExtractValue[bun.IDB](ctx, pgContextKey)
+	return context.ExtractValue[bun.IDB](ctx, postgresKey{})
 }

@@ -14,7 +14,7 @@ func TestExtractValue(t *testing.T) {
 	type foo struct{}
 
 	value := "bar"
-	ctx := context.WithValue(context.Background(), foo{}, value)
+	ctx := context.WithValue(t.Context(), foo{}, value)
 
 	t.Run("OK", func(t *testing.T) {
 		t.Parallel()

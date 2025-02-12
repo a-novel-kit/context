@@ -1,6 +1,7 @@
 #!/bin/bash
 
 KUBE_FILE="pod.test.yaml"
+PG_VOLUME="47870c341f31b19c21f15098c0c9e2fd67fb67602ce5ae04cc4f867ac6a5b7c8"
 TEST_TOOL_PKG="gotest.tools/gotestsum@latest"
 
 # First, we set up a temporary directory to receive the coverage (binary) files...
@@ -11,6 +12,7 @@ trap 'rm -rf -- "$GOCOVERTMPDIR"' EXIT
 int_handler()
 {
     podman kube down ${KUBE_FILE}
+    podman volume rm "${PG_VOLUME}" -f
 }
 trap int_handler INT
 
@@ -50,3 +52,4 @@ go tool cover -html=cover.out -o=cover.html
 
 # Normal execution: containers are shut down.
 podman kube down ${KUBE_FILE}
+podman volume rm "${PG_VOLUME}" -f

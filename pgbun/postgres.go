@@ -60,16 +60,17 @@ func NewContext(ctx context.Context, migrations *embed.FS) (context.Context, err
 	if migrations != nil {
 		// Apply migrations.
 		mig := migrate.NewMigrations()
+
 		if err = mig.Discover(migrations); err != nil {
 			return nil, fmt.Errorf("discover mig: %w", err)
 		}
 
 		migrator := migrate.NewMigrator(client, mig)
-		if err := migrator.Init(context.Background()); err != nil {
+		if err := migrator.Init(ctx); err != nil {
 			return nil, fmt.Errorf("create migrator: %w", err)
 		}
 
-		if _, err = migrator.Migrate(context.Background()); err != nil {
+		if _, err = migrator.Migrate(ctx); err != nil {
 			return nil, fmt.Errorf("apply mig: %w", err)
 		}
 	}

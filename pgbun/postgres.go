@@ -31,7 +31,6 @@ const (
 
 var ErrNoDSN = errors.New("missing DSN environment variable")
 
-// NewContext returns a new context with a shared PG connection.
 func NewContext(ctx context.Context, migrations *embed.FS) (context.Context, error) {
 	// Get the URL connection string from the environment.
 	dsn := os.Getenv(PostgresDSNEnv)
@@ -39,8 +38,15 @@ func NewContext(ctx context.Context, migrations *embed.FS) (context.Context, err
 		return nil, ErrNoDSN
 	}
 
+	return NewContextWithOptions(ctx, migrations, pgdriver.WithDSN(dsn))
+}
+
+// NewContextWithOptions returns a new context with a shared PG connection.
+func NewContextWithOptions(
+	ctx context.Context, migrations *embed.FS, options ...pgdriver.Option,
+) (context.Context, error) {
 	// Open a connection to the database.
-	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	sqldb := sql.OpenDB(pgdriver.NewConnector(options...))
 
 	// Make a temporary assignation. If something goes wrong, it is unnecessary and misleading to assign a value
 	// to the global variable.
@@ -50,8 +56,18 @@ func NewContext(ctx context.Context, migrations *embed.FS) (context.Context, err
 
 	// Wait for connection to be established.
 	err := client.PingContext(pingCtx)
+	select {
+	default:
+		if err == nil {
+			endPing()
 
-	endPing()
+			break
+		}
+
+		err = client.PingContext(pingCtx)
+	case <-pingCtx.Done():
+		break
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("ping database: %w", err)

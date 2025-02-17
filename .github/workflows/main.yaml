@@ -3,9 +3,28 @@ name: main
 on: [ push ]
 
 jobs:
+  lint:
+    uses: a-novel-kit/workflows/.github/workflows/lint-go.yaml@master
+
   test:
-    uses: a-novel-kit/workflows/.github/workflows/test-go.yaml@master
-    secrets:
-      codecov_token: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      postgres: true
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_USER: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DSN: postgres://test:test@localhost:5432/test?sslmode=disable
+    steps:
+      - uses: a-novel-kit/workflows/test/go@master
+        with:
+          codecov_token: ${{ secrets.CODECOV_TOKEN }}

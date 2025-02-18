@@ -29,7 +29,7 @@ func countPG(ctx context.Context, t *testing.T) int {
 }
 
 func TestPGContextOK(t *testing.T) {
-	ctx, err := pgctx.NewContext(context.Background(), nil)
+	ctx, err := pgctx.NewContext(t.Context(), nil)
 	require.NoError(t, err)
 
 	db, err := pgctx.Context(ctx)
@@ -40,14 +40,14 @@ func TestPGContextOK(t *testing.T) {
 }
 
 func TestPGContextOKMigrations(t *testing.T) {
-	ctx, err := pgctx.NewContext(context.Background(), &migrations.Migrations)
+	ctx, err := pgctx.NewContext(t.Context(), &migrations.Migrations)
 	require.NoError(t, err)
 
 	require.Equal(t, 0, countPG(ctx, t))
 }
 
 func TestPGContextTransactionRollbackExplicitly(t *testing.T) {
-	ctx, err := pgctx.NewContext(context.Background(), &migrations.Migrations)
+	ctx, err := pgctx.NewContext(t.Context(), &migrations.Migrations)
 	require.NoError(t, err)
 
 	tx, cancel, err := pgctx.NewContextTX(ctx, nil)
@@ -73,7 +73,7 @@ func TestPGContextTransactionRollbackExplicitly(t *testing.T) {
 }
 
 func TestPGContextTransactionRollbackAuto(t *testing.T) {
-	ctx, err := pgctx.NewContext(context.Background(), &migrations.Migrations)
+	ctx, err := pgctx.NewContext(t.Context(), &migrations.Migrations)
 	require.NoError(t, err)
 
 	parentCTX, parentCancel := context.WithCancel(ctx)
@@ -101,7 +101,7 @@ func TestPGContextTransactionRollbackAuto(t *testing.T) {
 }
 
 func TestPGContextTransactionCommit(t *testing.T) {
-	ctx, err := pgctx.NewContext(context.Background(), &migrations.Migrations)
+	ctx, err := pgctx.NewContext(t.Context(), &migrations.Migrations)
 	require.NoError(t, err)
 
 	tx, cancel, err := pgctx.NewContextTX(ctx, nil)
@@ -137,12 +137,12 @@ func TestPGContextTransactionCommit(t *testing.T) {
 
 func TestNoDSN(t *testing.T) {
 	t.Setenv(pgctx.PostgresDSNEnv, "")
-	_, err := pgctx.NewContext(context.Background(), nil)
+	_, err := pgctx.NewContext(t.Context(), nil)
 	require.ErrorIs(t, err, pgctx.ErrNoDSN)
 }
 
 func TestBadDSN(t *testing.T) {
 	t.Setenv(pgctx.PostgresDSNEnv, "postgres://test:test@localhost:1111/test?sslmode=disable")
-	_, err := pgctx.NewContext(context.Background(), nil)
+	_, err := pgctx.NewContext(t.Context(), nil)
 	require.Error(t, err)
 }

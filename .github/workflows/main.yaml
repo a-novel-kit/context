@@ -3,11 +3,6 @@ name: main
 on: [ push ]
 
 jobs:
-  lint:
-    permissions:
-      contents: read
-    uses: a-novel-kit/workflows/.github/workflows/lint-go.yaml@master
-
   test:
     runs-on: ubuntu-latest
     permissions:
@@ -29,6 +24,49 @@ jobs:
     env:
       DSN: postgres://test:test@localhost:5432/test?sslmode=disable
     steps:
-      - uses: a-novel-kit/workflows/test/go@master
+      - uses: a-novel-kit/workflows/go-actions/test-go@master
+
+  detect-modules:
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.set-modules.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - id: set-modules
+        run: echo "modules=$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')" >> $GITHUB_OUTPUT
+
+  lint:
+    needs: [ detect-modules ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
+    permissions:
+      contents: read
+    steps:
+      - uses: a-novel-kit/workflows/go-actions/lint-go@master
+        with:
+          working-directory: ${{ matrix.modules }}
+
+  report-codecov:
+    runs-on: ubuntu-latest
+    needs: [ test, lint ]
+    permissions:
+      contents: read
+    steps:
+      - uses: a-novel-kit/workflows/go-actions/codecov-go@master
         with:
           codecov_token: ${{ secrets.CODECOV_TOKEN }}
+
+  report-grc:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && success()
+    needs: [ test, lint ]
+    permissions:
+      contents: read
+    steps:
+      - uses: a-novel-kit/workflows/go-actions/go-report-card@master
+        if: github.ref == 'refs/heads/master' && success()

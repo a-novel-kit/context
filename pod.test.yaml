@@ -5,22 +5,6 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  annotations:
-    com.docker.official-images.bashbrew.arch/context-db: amd64
-    io.kubernetes.cri-o.ContainerType/context-db: container
-    io.kubernetes.cri-o.SandboxID/context-db: c35138e9dde790d3ce269bc1b061efc34ae634948c0b2a21ca70612a0b59f47
-    io.kubernetes.cri-o.TTY/context-db: "false"
-    io.podman.annotations.autoremove/context-db: "FALSE"
-    io.podman.annotations.init/context-db: "FALSE"
-    io.podman.annotations.privileged/context-db: "FALSE"
-    io.podman.annotations.publish-all/context-db: "FALSE"
-    org.opencontainers.image.base.digest/context-db: sha256:44bccdd61bf09a081b1db8c61cf49bfabf30ac7afcc970010137c0ab
-    org.opencontainers.image.base.name/context-db: debian:bookworm-slim
-    org.opencontainers.image.created/context-db: "2025-02-04T00:55:44Z"
-    org.opencontainers.image.revision/context-db: 042d8d043fed77e0e09b6fcda0991bca9e8664e3
-    org.opencontainers.image.source/context-db: https://github.com/docker-library/postgres.git#042d8d043fed77e0
-    org.opencontainers.image.url/context-db: https://hub.docker.com/_/postgres
-    org.opencontainers.image.version/context-db: "17.2"
   creationTimestamp: "2025-02-06T22:19:25Z"
   labels:
     app: anovel-kit-context-test

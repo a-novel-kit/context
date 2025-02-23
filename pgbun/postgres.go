@@ -52,32 +52,19 @@ func NewContextWithOptions(
 	// to the global variable.
 	client := bun.NewDB(sqldb, pgdialect.New())
 
-	pingCtx, endPing := context.WithTimeout(ctx, PingTimeout)
-
 	// Wait for connection to be established.
-	err := client.PingContext(pingCtx)
-	select {
-	default:
-		if err == nil {
-			endPing()
-
-			break
+	start := time.Now()
+	for err := client.PingContext(context.Background()); err != nil; err = client.PingContext(context.Background()) {
+		if time.Since(start) > PingTimeout {
+			return nil, fmt.Errorf("ping database: %w", err)
 		}
-
-		err = client.PingContext(pingCtx)
-	case <-pingCtx.Done():
-		break
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("ping database: %w", err)
 	}
 
 	if migrations != nil {
 		// Apply migrations.
 		mig := migrate.NewMigrations()
 
-		if err = mig.Discover(migrations); err != nil {
+		if err := mig.Discover(migrations); err != nil {
 			return nil, fmt.Errorf("discover mig: %w", err)
 		}
 
@@ -86,7 +73,7 @@ func NewContextWithOptions(
 			return nil, fmt.Errorf("create migrator: %w", err)
 		}
 
-		if _, err = migrator.Migrate(ctx); err != nil {
+		if _, err := migrator.Migrate(ctx); err != nil {
 			return nil, fmt.Errorf("apply mig: %w", err)
 		}
 	}

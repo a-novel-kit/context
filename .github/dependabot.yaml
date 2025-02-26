@@ -1,11 +1,15 @@
 version: 2
 updates:
   - package-ecosystem: gomod
+    rebase-strategy: auto
+    open-pull-requests-limit: 25
     directory: /
     schedule:
       interval: daily
   - package-ecosystem: gomod
     directory: /pgbun
+    rebase-strategy: auto
+    open-pull-requests-limit: 25
     schedule:
       interval: daily
     groups:
@@ -14,3 +18,10 @@ updates:
         patterns:
           - "github.com/uptrace/bun"
           - "github.com/uptrace/bun/*"
+  - package-ecosystem: "github-actions"
+    rebase-strategy: auto
+    open-pull-requests-limit: 25
+    directory: "/"
+    schedule:
+      # Check for updates to GitHub Actions every week
+      interval: "weekly"

@@ -5,10 +5,12 @@ test:
 # Check code quality.
 lint:
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run
+	npx prettier . --check
 
 format-main:
 	go mod tidy
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run --fix
+	npx prettier . --write
 
 format-pgbun:
 	cd "$(CURDIR)/pgbun" && go mod tidy

@@ -12,38 +12,37 @@ metadata:
 spec:
   automountServiceAccountToken: false
   containers:
-  - args:
-    - postgres
-    env:
-    - name: POSTGRES_DB
-      value: test
-    - name: POSTGRES_HOST_AUTH_METHOD
-      value: trust
-    - name: POSTGRES_PASSWORD
-      value: test
-    - name: POSTGRES_USER
-      value: test
-    image: docker.io/library/postgres:17
-    name: context-db
-    ports:
-    - containerPort: 5432
-      hostPort: 5432
-    resources: {}
-    securityContext:
-      capabilities:
-        drop:
-        - CAP_MKNOD
-        - CAP_NET_RAW
-        - CAP_AUDIT_WRITE
-    volumeMounts:
-    - mountPath: /var/lib/postgresql/data
-      name: 47870c341f31b19c21f15098c0c9e2fd67fb67602ce5ae04cc4f867ac6a5b7c8-pvc
+    - args:
+        - postgres
+      env:
+        - name: POSTGRES_DB
+          value: test
+        - name: POSTGRES_HOST_AUTH_METHOD
+          value: trust
+        - name: POSTGRES_PASSWORD
+          value: test
+        - name: POSTGRES_USER
+          value: test
+      image: docker.io/library/postgres:17
+      name: context-db
+      ports:
+        - containerPort: 5432
+          hostPort: 5432
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+            - CAP_MKNOD
+            - CAP_NET_RAW
+            - CAP_AUDIT_WRITE
+      volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: 47870c341f31b19c21f15098c0c9e2fd67fb67602ce5ae04cc4f867ac6a5b7c8-pvc
   enableServiceLinks: false
   hostname: anovel-kit-context-test
   restartPolicy: Always
   volumes:
-  - name: 47870c341f31b19c21f15098c0c9e2fd67fb67602ce5ae04cc4f867ac6a5b7c8-pvc
-    persistentVolumeClaim:
-      claimName: 47870c341f31b19c21f15098c0c9e2fd67fb67602ce5ae04cc4f867ac6a5b7c8
+    - name: 47870c341f31b19c21f15098c0c9e2fd67fb67602ce5ae04cc4f867ac6a5b7c8-pvc
+      persistentVolumeClaim:
+        claimName: 47870c341f31b19c21f15098c0c9e2fd67fb67602ce5ae04cc4f867ac6a5b7c8
 status: {}
-

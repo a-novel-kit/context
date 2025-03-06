@@ -1,6 +1,6 @@
 module github.com/a-novel-kit/context/pgbun
 
-go 1.24.0
+go 1.24.1
 
 require (
 	github.com/a-novel-kit/context v1.1.3

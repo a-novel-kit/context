@@ -106,7 +106,7 @@ func NewContextTX(ctx context.Context, opts *sql.TxOptions) (context.Context, fu
 		return nil, nil, fmt.Errorf("begin tx: %w", err)
 	}
 
-	ctxTx, cancelFn := context.WithCancel(context.WithValue(ctx, postgresKey{}, bun.IDB(tx)))
+	ctxTx, cancelFn := context.WithCancel(context.WithValue(ctx, postgresKey{}, bun.IDB(&tx)))
 	context.AfterFunc(ctxTx, func() {
 		// If context is canceled without calling the cancel function, abort.
 		// If the cancel function was already called, this will return an error,

@@ -50,7 +50,7 @@ func NewContextWithOptions(
 
 	// Make a temporary assignation. If something goes wrong, it is unnecessary and misleading to assign a value
 	// to the global variable.
-	client := bun.NewDB(sqldb, pgdialect.New())
+	client := bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
 
 	// Wait for connection to be established.
 	start := time.Now()
@@ -106,22 +106,28 @@ func NewContextTX(ctx context.Context, opts *sql.TxOptions) (context.Context, fu
 		return nil, nil, fmt.Errorf("begin tx: %w", err)
 	}
 
+	var done bool
+
 	ctxTx, cancelFn := context.WithCancel(context.WithValue(ctx, postgresKey{}, bun.IDB(&tx)))
 	context.AfterFunc(ctxTx, func() {
-		// If context is canceled without calling the cancel function, abort.
-		// If the cancel function was already called, this will return an error,
-		// so we ignore it.
-		_ = tx.Rollback()
+		if !done {
+			// If context is canceled without calling the cancel function, abort.
+			// If the cancel function was already called, this will return an error,
+			// so we ignore it.
+			_ = tx.Rollback()
+		}
 	})
 
 	cancelFnAugmented := func(commit bool) error {
 		defer cancelFn()
 
 		if commit {
+			done = true
+
 			return tx.Commit()
 		}
 
-		return tx.Rollback()
+		return nil
 	}
 
 	return ctxTx, cancelFnAugmented, nil

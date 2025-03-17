@@ -18,6 +18,12 @@ updates:
         patterns:
           - "github.com/uptrace/bun"
           - "github.com/uptrace/bun/*"
+  - package-ecosystem: gomod
+    rebase-strategy: auto
+    open-pull-requests-limit: 25
+    directory: /sentry
+    schedule:
+      interval: daily
   - package-ecosystem: "github-actions"
     rebase-strategy: auto
     open-pull-requests-limit: 25

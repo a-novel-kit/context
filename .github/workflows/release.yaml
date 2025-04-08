@@ -11,6 +11,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: create sub modules tags
+        run: |
+          git tag sentry/${{ github.ref_name }}
+          git push origin sentry/${{ github.ref_name }}
+          git tag pgbun/${{ github.ref_name }}
+          git push origin pgbun/${{ github.ref_name }}
       - uses: a-novel-kit/workflows/publish-actions/auto-release@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -3,7 +3,7 @@ module github.com/a-novel-kit/context/pgbun
 go 1.24.2
 
 require (
-	github.com/a-novel-kit/context v1.2.0
+	github.com/a-novel-kit/context v1.2.1
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.10.0
 	github.com/uptrace/bun v1.2.11

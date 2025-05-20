@@ -1,6 +1,7 @@
 package pgctx
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"errors"
@@ -12,11 +13,11 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/migrate"
-
-	"github.com/a-novel-kit/context"
 )
 
 type postgresKey struct{}
+
+var ErrInvalidPostgresContext = errors.New("invalid postgres context")
 
 const (
 	// PostgresDSNEnv is the env variable that should contain the Postgres connection string (Data Source Name or DSN).
@@ -135,5 +136,14 @@ func NewContextTX(ctx context.Context, opts *sql.TxOptions) (context.Context, fu
 
 // Context extracts the Postgres virtual database from the context.
 func Context(ctx context.Context) (bun.IDB, error) {
-	return context.ExtractValue[bun.IDB](ctx, postgresKey{})
+	db, ok := ctx.Value(postgresKey{}).(bun.IDB)
+	if !ok {
+		return nil, fmt.Errorf(
+			"(pgctx) extract pg: %w: got type %T, expected %T",
+			ErrInvalidPostgresContext,
+			ctx.Value(postgresKey{}), bun.IDB(nil),
+		)
+	}
+
+	return db, nil
 }

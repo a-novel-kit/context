@@ -16,9 +16,3 @@ Context manager package for A-Novel apps.
 ```
 go get -u github.com/a-novel-kit/context/pgbun
 ```
-
-## Sentry
-
-```
-go get -u github.com/a-novel-kit/context/sentry
-```
